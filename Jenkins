@@ -1,0 +1,36 @@
+pipeline {
+    agent any 
+    tools {
+        maven 'maven'
+    }
+    
+    environment {
+        SONAR_TOKEN = credentials('SONARQUBE_TOKEN')
+    }
+    
+    stages {
+        stage('git clone') {
+            steps {
+                git 'https://github.com/sunnyramagiri/project-self.git'
+            }
+        }
+        stage('mvn') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('sonar') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+        stage('docker') {
+            steps {
+                sh 'docker compose build'
+                sh 'docker compose up -d'
+            }
+        }
+    }
+}
